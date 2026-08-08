@@ -1,0 +1,327 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    @apply bg-background text-text font-sans antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Dark mode (default) */
+  :root,
+  .dark {
+    --bg-primary: #0f0f1a;
+    --bg-card: #1a1a2e;
+    --bg-card-hover: #24244a;
+    --bg-sidebar: #0a0a14;
+    --bg-input: #1a1a2e;
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border-color: rgba(255, 255, 255, 0.05);
+    --shadow-color: rgba(108, 92, 231, 0.1);
+  }
+  
+  /* Light mode */
+  .light {
+    --bg-primary: #f0f0f5;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f5f5fa;
+    --bg-sidebar: #e8e8ee;
+    --bg-input: #ffffff;
+    --text-primary: #1a1a2e;
+    --text-secondary: #4a4a6a;
+    --text-muted: #8a8aaa;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --shadow-color: rgba(108, 92, 231, 0.15);
+  }
+  
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--bg-card);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary rounded-full;
+  }
+}
+
+@layer components {
+  /* Backgrounds */
+  .bg-background {
+    background-color: var(--bg-primary) !important;
+  }
+  
+  .bg-background-card {
+    background-color: var(--bg-card) !important;
+  }
+  
+  .bg-background-sidebar {
+    background-color: var(--bg-sidebar) !important;
+  }
+  
+  /* Text colors */
+  .text-text {
+    color: var(--text-primary) !important;
+  }
+  
+  .text-text-secondary {
+    color: var(--text-secondary) !important;
+  }
+  
+  .text-text-muted {
+    color: var(--text-muted) !important;
+  }
+  
+  /* Cards */
+  .glass-card {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  .glass-card-hover {
+    @apply glass-card;
+    transition: all 0.3s ease;
+  }
+  
+  .glass-card-hover:hover {
+    border-color: rgba(108, 92, 231, 0.3) !important;
+    box-shadow: 0 4px 20px var(--shadow-color) !important;
+  }
+  
+  /* Sidebar items */
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer;
+    color: var(--text-secondary);
+  }
+  
+  .sidebar-item:hover {
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .light .sidebar-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .sidebar-item.active {
+    color: #6c5ce7 !important;
+    background-color: rgba(108, 92, 231, 0.1) !important;
+    border-right: 2px solid #6c5ce7;
+  }
+  
+  /* Input fields */
+  input, select, textarea {
+    background-color: var(--bg-input) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+  
+  input::placeholder {
+    color: var(--text-muted) !important;
+  }
+  
+  /* Border */
+  .border-white\/5 {
+    border-color: var(--border-color) !important;
+  }
+  
+  /* Metric values */
+  .metric-value {
+    @apply text-3xl font-bold bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent;
+  }
+  
+  /* Status badges */
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .status-badge.completed {
+    background-color: rgba(0, 184, 148, 0.2) !important;
+    color: #00b894 !important;
+  }
+  
+  .light .status-badge.completed {
+    background-color: rgba(0, 184, 148, 0.1) !important;
+    color: #00876c !important;
+  }
+  
+  .status-badge.active {
+    background-color: rgba(9, 132, 227, 0.2) !important;
+    color: #0984e3 !important;
+  }
+  
+  .light .status-badge.active {
+    background-color: rgba(9, 132, 227, 0.1) !important;
+    color: #0668b3 !important;
+  }
+  
+  .status-badge.planning {
+    background-color: rgba(253, 203, 110, 0.2) !important;
+    color: #fdcb6e !important;
+  }
+  
+  .light .status-badge.planning {
+    background-color: rgba(253, 203, 110, 0.15) !important;
+    color: #d4a020 !important;
+  }
+  
+  .status-badge.review {
+    background-color: rgba(108, 92, 231, 0.2) !important;
+    color: #6c5ce7 !important;
+  }
+  
+  .light .status-badge.review {
+    background-color: rgba(108, 92, 231, 0.1) !important;
+    color: #5a4bd1 !important;
+  }
+  
+  /* Priority badges */
+  .priority-high {
+    background-color: rgba(231, 76, 60, 0.2) !important;
+    color: #e74c3c !important;
+  }
+  
+  .light .priority-high {
+    background-color: rgba(231, 76, 60, 0.1) !important;
+    color: #c0392b !important;
+  }
+  
+  .priority-medium {
+    background-color: rgba(253, 203, 110, 0.2) !important;
+    color: #fdcb6e !important;
+  }
+  
+  .light .priority-medium {
+    background-color: rgba(253, 203, 110, 0.15) !important;
+    color: #d4a020 !important;
+  }
+  
+  .priority-low {
+    background-color: rgba(0, 184, 148, 0.2) !important;
+    color: #00b894 !important;
+  }
+  
+  .light .priority-low {
+    background-color: rgba(0, 184, 148, 0.1) !important;
+    color: #00876c !important;
+  }
+}
+/* ===== DENSITY SETTINGS ===== */
+
+/* Compact Density - Smaller spacing */
+.compact .glass-card {
+  padding: 0.75rem !important;
+}
+
+.compact .glass-card-hover {
+  padding: 0.75rem !important;
+}
+
+.compact .sidebar-item {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+}
+
+.compact .metric-value {
+  font-size: 1.75rem !important;
+}
+
+.compact .p-6 {
+  padding: 1rem !important;
+}
+
+.compact .gap-4 {
+  gap: 0.75rem !important;
+}
+
+.compact .gap-6 {
+  gap: 1rem !important;
+}
+
+.compact .p-5 {
+  padding: 0.75rem !important;
+}
+
+.compact .text-lg {
+  font-size: 1rem !important;
+}
+
+.compact .h-16 {
+  height: 3rem !important;
+}
+
+.compact .w-64 {
+  width: 56px !important;
+}
+
+.compact .sidebar-item span {
+  display: none !important;
+}
+
+.compact .sidebar-item .w-5 {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+.compact .flex-1 .max-w-xl {
+  max-width: 100% !important;
+}
+
+/* Spacious Density - Larger spacing */
+.spacious .glass-card {
+  padding: 1.5rem !important;
+}
+
+.spacious .glass-card-hover {
+  padding: 1.5rem !important;
+}
+
+.spacious .sidebar-item {
+  padding: 0.875rem 1.25rem !important;
+  font-size: 1rem !important;
+}
+
+.spacious .metric-value {
+  font-size: 2.5rem !important;
+}
+
+.spacious .p-6 {
+  padding: 2rem !important;
+}
+
+.spacious .gap-4 {
+  gap: 1.5rem !important;
+}
+
+.spacious .gap-6 {
+  gap: 2rem !important;
+}
+
+.spacious .p-5 {
+  padding: 1.5rem !important;
+}
+
+.spacious .text-lg {
+  font-size: 1.25rem !important;
+}
+
+.spacious .h-16 {
+  height: 4.5rem !important;
+}
+
+/* Comfortable Density - Default (no changes needed) */
