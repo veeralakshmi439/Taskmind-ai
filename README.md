@@ -1,6 +1,4 @@
-## 📝 Copy and Paste This Exactly into README.md
 
----
 
 ```markdown
 # 🧠 TaskMind AI
@@ -271,6 +269,4 @@ Your README will automatically render with:
 - ✅ Emojis
 - ✅ Sections
 
----
 
-**Copy and paste the above content into your README.md file!** 🚀
