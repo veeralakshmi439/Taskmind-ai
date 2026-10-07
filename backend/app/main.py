@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import auth, projects, tasks, meetings, team, documents
+from app.core.database import engine, Base
+from app.models import user, project, task
 
-from app.core.config import settings
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="TaskMind AI API",
@@ -26,7 +29,6 @@ app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
 app.include_router(meetings.router, prefix="/api/meetings", tags=["meetings"])
 app.include_router(team.router, prefix="/api/team", tags=["team"])
 app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
-
 
 @app.get("/")
 async def root():

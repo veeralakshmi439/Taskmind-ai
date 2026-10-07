@@ -1,6 +1,12 @@
 import { useState } from 'react';
-import { User, Building2, Palette, Bell, Shield } from 'lucide-react';
+import { User, Building2, Palette, Bell, Shield, Save } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { setCredentials } from '../store/authSlice';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+
+const API_URL = 'http://localhost:8000';
 
 const tabs = [
   { id: 'profile', label: 'Profile', icon: User },
@@ -13,6 +19,44 @@ const tabs = [
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const { theme, toggleTheme, density, toggleDensity } = useTheme();
+  const { user, token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+
+  // Editable fields
+  const [fullName, setFullName] = useState(user?.full_name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [timezone, setTimezone] = useState(user?.timezone || 'UTC');
+
+  const handleSaveProfile = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/auth/profile`,
+        {
+          full_name: fullName,
+          email: email,
+          timezone: timezone
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      // Update Redux store
+      dispatch(setCredentials({
+        user: { ...user, full_name: fullName, email: email, timezone: timezone },
+        token: token
+      }));
+
+      toast.success('Profile updated successfully! 🎉');
+    } catch (error) {
+      console.error('Update error:', error);
+      toast.error('Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderContent = () => {
     switch(activeTab) {
@@ -24,22 +68,54 @@ const Settings = () => {
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-text-secondary block mb-1">Full name</label>
-                <input type="text" value="Ava Mercer" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text" />
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary/50"
+                />
               </div>
               <div>
                 <label className="text-sm text-text-secondary block mb-1">Email</label>
-                <input type="email" value="ava@taskmind.ai" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary/50"
+                />
               </div>
               <div>
                 <label className="text-sm text-text-secondary block mb-1">Role</label>
-                <input type="text" value="Product Lead" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text" />
+                <input
+                  type="text"
+                  value={user?.role || 'Member'}
+                  readOnly
+                  className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text-muted cursor-not-allowed"
+                />
               </div>
               <div>
                 <label className="text-sm text-text-secondary block mb-1">Timezone</label>
-                <input type="text" value="Europe/Berlin" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text" />
+                <select
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                  className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary/50"
+                >
+                  <option value="UTC">UTC</option>
+                  <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                  <option value="Europe/Berlin">Europe/Berlin</option>
+                  <option value="America/New_York">America/New_York</option>
+                  <option value="America/Los_Angeles">America/Los_Angeles</option>
+                  <option value="Asia/Tokyo">Asia/Tokyo</option>
+                  <option value="Australia/Sydney">Australia/Sydney</option>
+                </select>
               </div>
-              <button className="px-4 py-2 bg-primary rounded-lg hover:bg-primary-dark transition-colors">
-                Save changes
+              <button
+                onClick={handleSaveProfile}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-primary rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {loading ? 'Saving...' : 'Save changes'}
               </button>
             </div>
           </div>
@@ -52,19 +128,19 @@ const Settings = () => {
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-text-secondary block mb-1">Workspace name</label>
-                <input type="text" value="Northwind Labs" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text" />
+                <input type="text" defaultValue="Northwind Labs" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary/50" />
               </div>
               <div>
                 <label className="text-sm text-text-secondary block mb-1">Domain</label>
-                <input type="text" value="northwind.taskmind.ai" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text" />
+                <input type="text" defaultValue="northwind.taskmind.ai" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary/50" />
               </div>
               <div>
                 <label className="text-sm text-text-secondary block mb-1">Plan</label>
-                <input type="text" value="Business" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text" />
+                <input type="text" defaultValue="Business" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary/50" />
               </div>
               <div>
                 <label className="text-sm text-text-secondary block mb-1">Seats</label>
-                <input type="text" value="24" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text" />
+                <input type="text" defaultValue="24" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary/50" />
               </div>
             </div>
           </div>
@@ -74,52 +150,40 @@ const Settings = () => {
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-text">Appearance</h3>
             <p className="text-sm text-text-secondary">Theme and density preferences.</p>
-            
-            {/* Theme Section */}
+
             <div>
               <label className="text-sm text-text-secondary block mb-2">Theme</label>
               <div className="grid grid-cols-3 gap-3">
                 {['light', 'dark', 'system'].map((themeOption) => {
                   const isActive = theme === themeOption;
-                  const labels = {
-                    light: '🌞 Light',
-                    dark: '🌙 Dark',
-                    system: '💻 System'
-                  };
+                  const labels = { light: '🌞 Light', dark: '🌙 Dark', system: '💻 System' };
                   return (
                     <button
                       key={themeOption}
                       onClick={() => toggleTheme(themeOption)}
                       className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
-                        isActive 
-                          ? 'border-primary bg-primary/10 text-primary' 
+                        isActive
+                          ? 'border-primary bg-primary/10 text-primary'
                           : 'border-white/10 hover:border-primary/30 text-text-secondary hover:text-text'
                       }`}
                     >
                       <div className="text-sm font-medium">{labels[themeOption]}</div>
-                      {isActive && (
-                        <div className="text-xs text-primary mt-1">✓ Active</div>
-                      )}
+                      {isActive && <div className="text-xs text-primary mt-1">✓ Active</div>}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Density Section */}
             <div>
               <label className="text-sm text-text-secondary block mb-2">Density</label>
               <div className="grid grid-cols-3 gap-3">
                 {['compact', 'comfortable', 'spacious'].map((densityOption) => {
                   const isActive = density === densityOption;
-                  const labels = {
-                    compact: '📦 Compact',
-                    comfortable: '📏 Comfortable',
-                    spacious: '📐 Spacious'
-                  };
+                  const labels = { compact: '📦 Compact', comfortable: '📏 Comfortable', spacious: '📐 Spacious' };
                   const descriptions = {
-                    compact: 'Tighter spacing, smaller elements',
-                    comfortable: 'Balanced spacing (default)',
+                    compact: 'Tighter spacing',
+                    comfortable: 'Balanced (default)',
                     spacious: 'More breathing room'
                   };
                   return (
@@ -127,16 +191,14 @@ const Settings = () => {
                       key={densityOption}
                       onClick={() => toggleDensity(densityOption)}
                       className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 text-left ${
-                        isActive 
-                          ? 'border-primary bg-primary/10 text-primary' 
+                        isActive
+                          ? 'border-primary bg-primary/10 text-primary'
                           : 'border-white/10 hover:border-primary/30 text-text-secondary hover:text-text'
                       }`}
                     >
                       <div className="text-sm font-medium">{labels[densityOption]}</div>
                       <div className="text-xs text-text-muted mt-1">{descriptions[densityOption]}</div>
-                      {isActive && (
-                        <div className="text-xs text-primary mt-1">✓ Active</div>
-                      )}
+                      {isActive && <div className="text-xs text-primary mt-1">✓ Active</div>}
                     </button>
                   );
                 })}
@@ -184,7 +246,7 @@ const Settings = () => {
               </div>
               <div>
                 <label className="text-sm text-text-secondary block mb-1">Session timeout (minutes)</label>
-                <input type="number" value="60" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text" />
+                <input type="number" defaultValue="60" className="w-full bg-background-card border border-white/10 rounded-lg px-4 py-2 text-text focus:outline-none focus:border-primary/50" />
               </div>
             </div>
           </div>

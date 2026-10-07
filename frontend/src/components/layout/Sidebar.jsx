@@ -46,7 +46,11 @@ const Sidebar = () => {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `sidebar-item ${isActive ? 'active' : ''}`
+              `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                isActive 
+                  ? 'text-primary bg-primary/10 border-r-2 border-primary' 
+                  : 'text-text-secondary hover:text-text hover:bg-white/5'
+              }`
             }
           >
             <item.icon className="w-5 h-5" />
@@ -54,9 +58,6 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
-
-      {/* Phase 1 preview banner removed */}
-
     </aside>
   );
 };

@@ -1,60 +1,57 @@
 import { useState } from 'react';
-import { X, Calendar, Users, Tag, AlertCircle } from 'lucide-react';
-import { projectsAPI } from '../../services/api';
+import { X } from 'lucide-react';
+import { tasksAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 
-const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
-  const [projectData, setProjectData] = useState({
-    name: '',
+const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
+  const [taskData, setTaskData] = useState({
+    title: '',
     description: '',
-    status: 'Planning',
+    status: 'Todo',
     priority: 'Medium',
+    labels: '',
     due_date: '',
   });
 
   const [loading, setLoading] = useState(false);
 
-  const statuses = ['Planning', 'Active', 'In Review', 'Completed', 'On Hold'];
+  const statuses = ['Backlog', 'Todo', 'In Progress', 'Review', 'Done'];
   const priorities = ['Low', 'Medium', 'High', 'Urgent'];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!projectData.name.trim()) {
-      toast.error('Project name is required');
+    if (!taskData.title.trim()) {
+      toast.error('Task title is required');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await projectsAPI.create({
-        name: projectData.name,
-        description: projectData.description,
-        status: projectData.status,
-        priority: projectData.priority,
-        due_date: projectData.due_date || null,
-        progress: 0,
-        tasks_done: 0,
-        tasks_total: 0,
+      const response = await tasksAPI.create({
+        title: taskData.title,
+        description: taskData.description,
+        status: taskData.status,
+        priority: taskData.priority,
+        labels: taskData.labels || null,
+        due_date: taskData.due_date || null,
       });
 
-      if (onProjectCreated) {
-        onProjectCreated(response.data);
-      }
+      if (onTaskCreated) onTaskCreated(response.data);
 
-      // Reset
-      setProjectData({
-        name: '',
+      setTaskData({
+        title: '',
         description: '',
-        status: 'Planning',
+        status: 'Todo',
         priority: 'Medium',
+        labels: '',
         due_date: '',
       });
       onClose();
     } catch (error) {
-      console.error('Error creating project:', error);
-      toast.error(error.response?.data?.detail || 'Failed to create project');
+      console.error('Error creating task:', error);
+      toast.error('Failed to create task');
     } finally {
       setLoading(false);
     }
@@ -64,27 +61,24 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-background-card border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+      <div className="bg-background-card border border-white/10 rounded-2xl w-full max-w-lg p-6">
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-text">Create New Project 🚀</h2>
-            <p className="text-text-secondary text-sm mt-1">Capture meetings, generate tasks and ship faster.</p>
-          </div>
+          <h2 className="text-xl font-bold text-text">Create New Task 📋</h2>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/5">
             <X className="w-5 h-5 text-text-secondary" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-sm font-medium text-text block mb-1.5">
-              Project Name <span className="text-red-400">*</span>
+              Task Title <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
-              value={projectData.name}
-              onChange={(e) => setProjectData({...projectData, name: e.target.value})}
-              placeholder="e.g., Atlas Platform Revamp"
+              value={taskData.title}
+              onChange={(e) => setTaskData({ ...taskData, title: e.target.value })}
+              placeholder="e.g., Design login page"
               className="w-full bg-background border border-white/10 rounded-lg px-4 py-2.5 text-text focus:outline-none focus:border-primary/50"
               required
             />
@@ -93,20 +87,20 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
           <div>
             <label className="text-sm font-medium text-text block mb-1.5">Description</label>
             <textarea
-              value={projectData.description}
-              onChange={(e) => setProjectData({...projectData, description: e.target.value})}
-              placeholder="What's this project about?"
+              value={taskData.description}
+              onChange={(e) => setTaskData({ ...taskData, description: e.target.value })}
+              placeholder="What needs to be done?"
               rows="3"
               className="w-full bg-background border border-white/10 rounded-lg px-4 py-2.5 text-text focus:outline-none focus:border-primary/50 resize-none"
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-text block mb-1.5">Status</label>
               <select
-                value={projectData.status}
-                onChange={(e) => setProjectData({...projectData, status: e.target.value})}
+                value={taskData.status}
+                onChange={(e) => setTaskData({ ...taskData, status: e.target.value })}
                 className="w-full bg-background border border-white/10 rounded-lg px-4 py-2.5 text-text focus:outline-none focus:border-primary/50"
               >
                 {statuses.map(s => <option key={s} value={s}>{s}</option>)}
@@ -115,8 +109,8 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
             <div>
               <label className="text-sm font-medium text-text block mb-1.5">Priority</label>
               <select
-                value={projectData.priority}
-                onChange={(e) => setProjectData({...projectData, priority: e.target.value})}
+                value={taskData.priority}
+                onChange={(e) => setTaskData({ ...taskData, priority: e.target.value })}
                 className="w-full bg-background border border-white/10 rounded-lg px-4 py-2.5 text-text focus:outline-none focus:border-primary/50"
               >
                 {priorities.map(p => <option key={p} value={p}>{p}</option>)}
@@ -125,12 +119,23 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
           </div>
 
           <div>
+            <label className="text-sm font-medium text-text block mb-1.5">Labels</label>
+            <input
+              type="text"
+              value={taskData.labels}
+              onChange={(e) => setTaskData({ ...taskData, labels: e.target.value })}
+              placeholder="e.g., bug, feature, design (comma-separated)"
+              className="w-full bg-background border border-white/10 rounded-lg px-4 py-2.5 text-text focus:outline-none focus:border-primary/50"
+            />
+          </div>
+
+          <div>
             <label className="text-sm font-medium text-text block mb-1.5">Due Date</label>
             <input
               type="date"
-              value={projectData.due_date}
-              onChange={(e) => setProjectData({...projectData, due_date: e.target.value})}
-              className="w-full bg-background border border-white/10 rounded-lg px-4 py-2.5 text-text focus:outline-none focus:border-primary/50 [color-scheme:dark]"
+              value={taskData.due_date}
+              onChange={(e) => setTaskData({ ...taskData, due_date: e.target.value })}
+              className="w-full bg-background border border-white/10 rounded-lg px-4 py-2.5 text-text focus:outline-none focus:border-primary/50"
               style={{ colorScheme: 'dark' }}
             />
           </div>
@@ -148,7 +153,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
               disabled={loading}
               className="flex-1 px-4 py-2.5 bg-primary rounded-lg hover:bg-primary-dark font-medium disabled:opacity-50"
             >
-              {loading ? 'Creating...' : 'Create Project'}
+              {loading ? 'Creating...' : 'Create Task'}
             </button>
           </div>
         </form>
@@ -157,4 +162,4 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
   );
 };
 
-export default CreateProjectModal;
+export default CreateTaskModal;

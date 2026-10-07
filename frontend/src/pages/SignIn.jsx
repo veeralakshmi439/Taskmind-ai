@@ -4,10 +4,14 @@ import { useDispatch } from 'react-redux';
 import { setCredentials } from '../store/authSlice';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:8000';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
@@ -15,18 +19,55 @@ const SignIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!email || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
     setLoading(true);
-    
-    // Mock authentication
-    setTimeout(() => {
-      dispatch(setCredentials({
-        user: { name: 'Ava Mercer', email, role: 'Product Lead' },
-        token: 'mock-jwt-token'
-      }));
-      toast.success('Welcome back!');
-      navigate('/');
+
+    try {
+      const formData = new URLSearchParams();
+      formData.append('username', email);
+      formData.append('password', password);
+
+      const response = await axios.post(
+        `${API_URL}/api/auth/token`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }
+      );
+
+      if (response.data) {
+        const { access_token, user } = response.data;
+
+        // Pass remember flag
+        dispatch(setCredentials({
+          user: user,
+          token: access_token,
+          remember: remember,
+        }));
+
+        toast.success(`Welcome back, ${user.full_name}! 🎉`);
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+
+      if (error.response?.status === 401) {
+        toast.error('Invalid email or password. Please try again.');
+      } else if (error.response?.data?.detail) {
+        toast.error(error.response.data.detail);
+      } else {
+        toast.error('Something went wrong. Please try again.');
+      }
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -71,13 +112,25 @@ const SignIn = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+            </div>
+
+            {/* Remember Me Checkbox */}
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/10 bg-background-card text-primary focus:ring-primary"
+                />
+                <span className="text-sm text-text-secondary">Remember me</span>
+              </label>
+              <Link to="#" className="text-sm text-primary hover:text-primary-light">
+                Forgot password?
+              </Link>
             </div>
 
             <button
@@ -85,24 +138,25 @@ const SignIn = () => {
               disabled={loading}
               className="w-full py-2 bg-primary rounded-lg hover:bg-primary-dark transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Signing in...</span>
+                </div>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </form>
 
-          <p className="text-xs text-text-muted text-center mt-4">
-            Phase 1 demo — any valid-looking credentials open the workspace.
-          </p>
-
           <p className="text-sm text-text-secondary text-center mt-6">
-            New here? <Link to="/signup" className="text-primary hover:text-primary-light transition-colors">Create an account</Link>
+            Don't have an account? <Link to="/signup" className="text-primary hover:text-primary-light transition-colors">Create one</Link>
           </p>
         </div>
 
         <div className="flex items-center justify-center gap-4 mt-6 text-xs text-text-muted">
           <span>30°C</span>
           <span>☁️ Partly cloudy</span>
-          <span>9:59 PM</span>
-          <span>8/3/2026</span>
         </div>
       </div>
     </div>

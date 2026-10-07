@@ -1,72 +1,106 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 from typing import List
-from pydantic import BaseModel
-from datetime import datetime
+from app.core.database import get_db
+from app.models.project import Project
+from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse
+from app.core.security import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
-class Project(BaseModel):
-    id: int
-    name: str
-    description: str
-    status: str
-    progress: int
-    tasks_done: int
-    tasks_total: int
-    due_date: str
-    priority: str
+# ============ CREATE PROJECT ============
+@router.post("/", response_model=ProjectResponse)
+async def create_project(
+    project: ProjectCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ✅ Use Depends
+):
+    """Create a new project"""
+    db_project = Project(
+        **project.dict(),
+        owner_id=current_user.id
+    )
+    db.add(db_project)
+    db.commit()
+    db.refresh(db_project)
+    return db_project
 
-# Mock data
-mock_projects = [
-    {
-        "id": 1,
-        "name": "Q2 Reporting Suite",
-        "description": "Executive dashboards covering delivery velocity, meeting load and team capacity.",
-        "status": "Completed",
-        "progress": 100,
-        "tasks_done": 30,
-        "tasks_total": 30,
-        "due_date": "Dec 20, 1969",
-        "priority": "High"
-    },
-    {
-        "id": 2,
-        "name": "Design System 2.0",
-        "description": "Token-driven theming, dark mode parity and accessible component variants.",
-        "status": "Active",
-        "progress": 82,
-        "tasks_done": 21,
-        "tasks_total": 26,
-        "due_date": "Jan 5, 1970",
-        "priority": "Medium"
-    },
-    {
-        "id": 3,
-        "name": "Meeting Intelligence Beta",
-        "description": "Foundation work for converting structured, assignable execution plans.",
-        "status": "Active",
-        "progress": 41,
-        "tasks_done": 13,
-        "tasks_total": 31,
-        "due_date": "Jan 10, 1970",
-        "priority": "Urgent"
-    }
-]
+# ============ GET ALL PROJECTS ============
+@router.get("/", response_model=List[ProjectResponse])
+async def get_projects(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ✅ Use Depends
+):
+    """Get all projects for current user"""
+    projects = db.query(Project).filter(
+        Project.owner_id == current_user.id
+    ).offset(skip).limit(limit).all()
+    return projects
 
-@router.get("/", response_model=List[Project])
-async def get_projects():
-    return mock_projects
-
-@router.get("/{project_id}")
-async def get_project(project_id: int):
-    project = next((p for p in mock_projects if p["id"] == project_id), None)
+# ============ GET SINGLE PROJECT ============
+@router.get("/{project_id}", response_model=ProjectResponse)
+async def get_project(
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ✅ Use Depends
+):
+    """Get a specific project"""
+    project = db.query(Project).filter(
+        Project.id == project_id,
+        Project.owner_id == current_user.id
+    ).first()
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Project not found"
+        )
     return project
 
-@router.post("/")
-async def create_project(project: Project):
-    new_project = project.dict()
-    new_project["id"] = len(mock_projects) + 1
-    mock_projects.append(new_project)
-    return new_project
+# ============ UPDATE PROJECT ============
+@router.put("/{project_id}", response_model=ProjectResponse)
+async def update_project(
+    project_id: int,
+    project_update: ProjectUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ✅ Use Depends
+):
+    """Update a project"""
+    project = db.query(Project).filter(
+        Project.id == project_id,
+        Project.owner_id == current_user.id
+    ).first()
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Project not found"
+        )
+    update_data = project_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(project, key, value)
+    db.commit()
+    db.refresh(project)
+    return project
+
+# ============ DELETE PROJECT ============
+@router.delete("/{project_id}")
+async def delete_project(
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ✅ Use Depends
+):
+    """Delete a project"""
+    project = db.query(Project).filter(
+        Project.id == project_id,
+        Project.owner_id == current_user.id
+    ).first()
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Project not found"
+        )
+    db.delete(project)
+    db.commit()
+    return {"message": "Project deleted successfully"}

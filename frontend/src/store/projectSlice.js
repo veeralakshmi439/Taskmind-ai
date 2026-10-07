@@ -23,8 +23,13 @@ const projectSlice = createSlice({
     setLoading: (state, action) => {
       state.loading = action.payload;
     },
+    clearAll: (state) => {
+      state.projects = [];
+      state.tasks = [];
+      state.meetings = [];
+      },
   },
 });
 
-export const { setProjects, setTasks, setMeetings, setLoading } = projectSlice.actions;
+export const { setProjects, setTasks, setMeetings, setLoading, clearAll } = projectSlice.actions;
 export default projectSlice.reducer;

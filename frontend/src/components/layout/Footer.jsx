@@ -58,10 +58,6 @@ const Footer = () => {
 
   return (
     <footer className="border-t border-white/5 px-6 py-3 flex items-center justify-between bg-background/50 backdrop-blur-sm flex-shrink-0">
-      <div className="flex items-center gap-6 text-xs text-text-muted">
-        <span>Phase 1 preview</span>
-        <span>Running on mock data. AI features arrive in Phase 2.</span>
-      </div>
       <div className="flex items-center gap-4 text-xs text-text-muted">
         <div className="flex items-center gap-2">
           <span>{weather.temp}</span>

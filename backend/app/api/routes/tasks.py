@@ -1,44 +1,92 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 from typing import List
-from pydantic import BaseModel
+from app.core.database import get_db
+from app.models.task import Task
+from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
+from app.core.security import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
-class Task(BaseModel):
-    id: int
-    title: str
-    description: str
-    status: str
-    labels: List[str]
+# ============ CREATE TASK ============
+@router.post("/", response_model=TaskResponse)
+async def create_task(
+    task: TaskCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    db_task = Task(**task.dict(), owner_id=current_user.id)
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+    return db_task
 
-# Mock data
-mock_tasks = {
-    "backlog": [
-        {"id": 1, "title": "Onboarding checklist", "description": "Write the six first-run steps", "status": "backlog", "labels": ["copy"]},
-    ],
-    "todo": [
-        {"id": 2, "title": "Action item extraction", "description": "Draft the JSON contract", "status": "todo", "labels": ["schema"]},
-    ],
-    "in-progress": [
-        {"id": 3, "title": "Sidebar collapse", "description": "Icon-rail state with keyboard shortcut", "status": "in-progress", "labels": ["ui"]},
-    ],
-    "review": [
-        {"id": 4, "title": "Dark mode token audit", "description": "Check contract ratios", "status": "review", "labels": ["design"]},
-    ],
-    "done": [
-        {"id": 5, "title": "Define routing contract", "description": "Document nested layout rules", "status": "done", "labels": ["architecture"]},
-    ],
-}
+# ============ GET ALL TASKS ============
+@router.get("/", response_model=List[TaskResponse])
+async def get_tasks(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    tasks = db.query(Task).filter(
+        Task.owner_id == current_user.id
+    ).offset(skip).limit(limit).all()
+    return tasks
 
-@router.get("/")
-async def get_tasks():
-    return mock_tasks
+# ============ GET SINGLE TASK ============
+@router.get("/{task_id}", response_model=TaskResponse)
+async def get_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    task = db.query(Task).filter(
+        Task.id == task_id,
+        Task.owner_id == current_user.id
+    ).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
 
-@router.post("/")
-async def create_task(task: Task):
-    tasks_list = mock_tasks.get(task.status, [])
-    new_task = task.dict()
-    new_task["id"] = len(tasks_list) + 1
-    tasks_list.append(new_task)
-    mock_tasks[task.status] = tasks_list
-    return new_task
+# ============ UPDATE TASK ============
+@router.put("/{task_id}", response_model=TaskResponse)
+async def update_task(
+    task_id: int,
+    task_update: TaskUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    task = db.query(Task).filter(
+        Task.id == task_id,
+        Task.owner_id == current_user.id
+    ).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    update_data = task_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(task, key, value)
+
+    db.commit()
+    db.refresh(task)
+    return task
+
+# ============ DELETE TASK ============
+@router.delete("/{task_id}")
+async def delete_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    task = db.query(Task).filter(
+        Task.id == task_id,
+        Task.owner_id == current_user.id
+    ).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    db.delete(task)
+    db.commit()
+    return {"message": "Task deleted successfully"}

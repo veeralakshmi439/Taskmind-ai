@@ -22,9 +22,11 @@ function App() {
     <Router>
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <Routes>
+        {/* Public routes */}
         <Route path="/signin" element={!isAuthenticated ? <SignIn /> : <Navigate to="/" />} />
         <Route path="/signup" element={!isAuthenticated ? <SignUp /> : <Navigate to="/" />} />
         
+        {/* Protected routes */}
         <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/signin" />}>
           <Route index element={<Dashboard />} />
           <Route path="projects" element={<Projects />} />

@@ -14,58 +14,48 @@ export const ThemeProvider = ({ children }) => {
   // Get saved theme from localStorage
   const getSavedTheme = () => {
     const saved = localStorage.getItem('theme');
-    if (saved) return saved;
+    if (saved && ['light', 'dark', 'system'].includes(saved)) {
+      return saved;
+    }
+    // Check system preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
     return 'light';
   };
 
-  // Get saved density from localStorage
-  const getSavedDensity = () => {
-    const saved = localStorage.getItem('density');
-    return saved || 'comfortable';
-  };
-
   const [theme, setTheme] = useState(getSavedTheme);
-  const [density, setDensity] = useState(getSavedDensity);
 
   useEffect(() => {
+    // Remove all theme classes first
+    document.documentElement.classList.remove('dark', 'light');
+    
     // Apply theme
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
     } else if (theme === 'light') {
       document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
     } else if (theme === 'system') {
-      document.documentElement.classList.remove('dark', 'light');
+      // Follow system preference
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.classList.add('dark');
       } else {
         document.documentElement.classList.add('light');
       }
     }
+    
     localStorage.setItem('theme', theme);
+    console.log('Theme applied:', theme);
+    console.log('HTML classes:', document.documentElement.className);
   }, [theme]);
 
-  useEffect(() => {
-    // Apply density
-    document.documentElement.classList.remove('compact', 'comfortable', 'spacious');
-    document.documentElement.classList.add(density);
-    localStorage.setItem('density', density);
-  }, [density]);
-
   const toggleTheme = (newTheme) => {
+    console.log('Toggling theme to:', newTheme);
     setTheme(newTheme);
   };
 
-  const toggleDensity = (newDensity) => {
-    setDensity(newDensity);
-  };
-
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, density, toggleDensity }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

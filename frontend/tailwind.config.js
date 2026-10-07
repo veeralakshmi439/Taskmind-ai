@@ -4,7 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'class',  // ✅ This enables dark mode with class
+  darkMode: 'class',  // ✅ This must be here!
   theme: {
     extend: {
       colors: {
@@ -24,13 +24,6 @@ export default {
           secondary: '#94a3b8',
           muted: '#64748b',
         },
-        accent: {
-          teal: '#00b894',
-          blue: '#0984e3',
-          red: '#e74c3c',
-          green: '#00b894',
-          yellow: '#fdcb6e',
-        }
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
