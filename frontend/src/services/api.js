@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000';
+// Use environment variable in production, fallback to localhost for dev
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+console.log('🔌 API URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
@@ -9,7 +11,7 @@ const api = axios.create({
   },
 });
 
-// Add token to every request (from localStorage OR sessionStorage)
+// Add token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -26,7 +28,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Don't redirect — the app will handle it
       console.warn('401 Unauthorized — token expired');
     }
     return Promise.reject(error);
