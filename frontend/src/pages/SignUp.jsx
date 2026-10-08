@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { Eye, EyeOff, User, Users, Code, Briefcase, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';   // ✅ Uses env var
 
 const SignUp = () => {
   const [step, setStep] = useState(1); // 1: Account Info, 2: Role Selection
